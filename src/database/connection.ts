@@ -1,6 +1,5 @@
-// import * as migrations from "./migrations";
 import * as entities from "./entities";
-import { createConnection, getConnection, QueryRunner, Connection, ConnectionOptions } from "typeorm";
+import { createConnection, getConnection, Connection, ConnectionOptions } from "typeorm";
 
 export const dbConfig: ConnectionOptions = {
     type: "postgres",
@@ -39,20 +38,6 @@ export class DatabaseConnection {
         }
         const connection = await createConnection(dbConfig);
 
-        // await connection.runMigrations();
-
         return connection.createEntityManager();
-    }
-
-    async getQueryRunner(): Promise<QueryRunner> {
-        const existingConnection = await this.tryGetExistingConnection();
-        if (existingConnection) {
-            return existingConnection.createQueryRunner();
-        }
-
-        const connection = await createConnection(dbConfig);
-        // await connection.runMigrations();
-
-        return connection.createQueryRunner();
     }
 }
