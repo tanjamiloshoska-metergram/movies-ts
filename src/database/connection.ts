@@ -1,16 +1,16 @@
-import * as entities from "./entities";
 import { createConnection, getConnection, Connection, ConnectionOptions } from "typeorm";
+import { Movie } from "./entities/movie";
 
 export const dbConfig: ConnectionOptions = {
     type: "postgres",
     host: "localhost",
     port: 5432,
-    username: "postgres",
-    password: "root",
-    database: "postgres",
+    username: "movies_user",
+    password: "password",
+    database: "Movies",
     synchronize: true,
     logging: true,
-    entities: Object.values(entities),
+    entities: [Movie],
     subscribers: [],
     migrations: [],
 };

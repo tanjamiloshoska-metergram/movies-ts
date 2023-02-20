@@ -3,20 +3,26 @@ import { Entity, Column, PrimaryColumn } from "typeorm";
 @Entity()
 export class Movie {
     @PrimaryColumn()
-    id!: string;
+    imdbId!: string;
 
     @Column()
     title!: string;
 
     @Column()
+    actors!: string;
+
+    @Column("text", { array: true })
+    genres!: string[];
+
+    @Column()
     year!: string;
 
     @Column()
-    runtime!: string;
+    runtime!: number;
 
     @Column()
-    imdbRating!: string;
+    imdbRating!: number;
 
     @Column()
-    imdbVotes!: string;
+    imdbVotes!: number;
 }
