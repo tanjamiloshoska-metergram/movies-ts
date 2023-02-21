@@ -17,51 +17,53 @@ export class MovieManager {
     async getMovieById(id: string): Promise<Movie | ResponseMessage> {
         const movie: Movie | undefined = await this.moviesRepository.findOne({ imdbId: id });
 
-        if (!movie)
+        if (!movie) {
             return {
                 status: "404",
                 message: "Movie not found",
             };
+        }
 
         return movie;
     }
 
-
-    //does not work because it is an entity?? 
     async getMoviesByQuery(query: MoviesQuery): Promise<Movie[]> {
         const { actor, genre, imdbSort } = query;
-        let movies: Movie[] = await this.moviesRepository.find();
-        if (actor) {
-            movies = movies.filter((movie) => movie.actors.includes(actor));
+        if(actor) { 
+            return await this.moviesRepository.createQueryBuilder("movie")
+                .where("movie.actors LIKE :actor", { actor: `%${actor}%` })
+                .getMany();
         }
-        if (genre) {
-            movies = movies.filter((movie) => movie.genres.includes(genre));
+        if(genre) {
+            return await this.moviesRepository.createQueryBuilder("movie")
+                .where(":genre = ANY(movie.genres)", { genre: `${genre}` })
+                .getMany();
         }
-        if (imdbSort) {
-            movies = movies.sort((a, b) => {
-                if (imdbSort === "asc") {
-                    return a.imdbRating - b.imdbRating;
-                }
-                return b.imdbRating - a.imdbRating;
-            });
+        if(imdbSort) {
+            return await this.moviesRepository.createQueryBuilder("movie")
+                .orderBy("movie.imdbRating", imdbSort)
+                .getMany();
         }
-        return movies;
+
+        return this.moviesRepository.find();
     }
 
     async addMovie(movie: Movie): Promise<Movie | ResponseMessage> {
         const { error } = validMovie.validate(movie);
-        if (error)
+        if (error) {
             return {
                 status: "400",
                 message: error.details[0].message,
             };
+        }
 
         const existingMovie: Movie | undefined = await this.moviesRepository.findOne({ imdbId: movie.imdbId });
-        if (existingMovie)
+        if (existingMovie) {
             return {
                 status: "409",
                 message: "Movie already exists",
             };
+        }
 
         try {
             await this.moviesRepository.save(movie);
@@ -80,18 +82,19 @@ export class MovieManager {
 
     async updateMovie(id: string, movie: Movie): Promise<Movie | ResponseMessage> {
         const existingMovie: Movie | undefined = await this.moviesRepository.findOne({ imdbId: id });
-        if (!existingMovie)
+        if (!existingMovie) {
             return {
                 status: "404",
                 message: "Movie not found",
             };
-
+        }
         const { error } = validMovieUpdate.validate(movie);
-        if (error)
+        if (error) {
             return {
                 status: "400",
                 message: error.details[0].message,
             };
+        }
 
         try {
             await this.moviesRepository.update(
@@ -123,11 +126,12 @@ export class MovieManager {
 
     async deleteMovie(id: string): Promise<Movie | ResponseMessage> {
         const movie: Movie | undefined = await this.moviesRepository.findOne({ imdbId: id });
-        if (!movie)
+        if (!movie) {
             return {
                 status: "404",
                 message: "Movie not found",
             };
+        }
 
         try {
             await this.moviesRepository.remove(movie);

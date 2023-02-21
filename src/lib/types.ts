@@ -6,5 +6,5 @@ export type ResponseMessage = {
 export type MoviesQuery = {
     actor?: string;
     genre?: string;
-    imdbSort?: string;
+    imdbSort?: "ASC" | "DESC";
 };
