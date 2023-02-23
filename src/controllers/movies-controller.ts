@@ -1,7 +1,7 @@
-import { EntityManager, Repository } from "typeorm";
 import { Movie } from "../database/entities/movie";
 import { validMovie, validMovieUpdate } from "../lib/authentication-schema";
 import { MoviesQuery, ResponseMessage } from "../lib/types";
+import { ArrayContains, EntityManager, Like, Repository } from "typeorm";
 
 export class MovieManager {
     private readonly moviesRepository: Repository<Movie>;
@@ -15,7 +15,7 @@ export class MovieManager {
     }
 
     async getMovieById(id: string): Promise<Movie | ResponseMessage> {
-        const movie: Movie | undefined = await this.moviesRepository.findOne({ imdbId: id });
+        const movie: Movie | null = await this.moviesRepository.findOneBy({imdbId: id});
 
         if (!movie) {
             return {
@@ -29,23 +29,30 @@ export class MovieManager {
 
     async getMoviesByQuery(query: MoviesQuery): Promise<Movie[]> {
         const { actor, genre, imdbSort } = query;
-        if(actor) { 
-            return await this.moviesRepository.createQueryBuilder("movie")
-                .where("movie.actors LIKE :actor", { actor: `%${actor}%` })
-                .getMany();
-        }
-        if(genre) {
-            return await this.moviesRepository.createQueryBuilder("movie")
-                .where(":genre = ANY(movie.genres)", { genre: `${genre}` })
-                .getMany();
-        }
-        if(imdbSort) {
-            return await this.moviesRepository.createQueryBuilder("movie")
-                .orderBy("movie.imdbRating", imdbSort)
-                .getMany();
-        }
 
-        return this.moviesRepository.find();
+        // const movies = this.moviesRepository.createQueryBuilder("movie");
+
+        // if (actor) {
+        //     movies.where("movie.actors LIKE :actor", { actor: `%${actor}%` });
+        // }
+        // if (genre) {
+        //     movies.andWhere(":genre = ANY(movie.genres)", { genre: `${genre}` });
+        // }
+        // if (imdbSort) {
+        //     movies.orderBy("movie.imdbRating", imdbSort);
+        // }
+
+        // return movies.getMany();
+
+        return await this.moviesRepository.find({
+            where: {
+                actors: Like(`%${actor}%`),
+                genres: genre && ArrayContains([genre]),
+            },
+            order: {
+                imdbRating: imdbSort,
+            },
+        });
     }
 
     async addMovie(movie: Movie): Promise<Movie | ResponseMessage> {
@@ -57,7 +64,7 @@ export class MovieManager {
             };
         }
 
-        const existingMovie: Movie | undefined = await this.moviesRepository.findOne({ imdbId: movie.imdbId });
+        const existingMovie: Movie | null = await this.moviesRepository.findOneBy({ imdbId: movie.imdbId });
         if (existingMovie) {
             return {
                 status: "409",
@@ -81,7 +88,7 @@ export class MovieManager {
     }
 
     async updateMovie(id: string, movie: Movie): Promise<Movie | ResponseMessage> {
-        const existingMovie: Movie | undefined = await this.moviesRepository.findOne({ imdbId: id });
+        const existingMovie: Movie | null = await this.moviesRepository.findOneBy({ imdbId: id });
         if (!existingMovie) {
             return {
                 status: "404",
@@ -125,7 +132,7 @@ export class MovieManager {
     }
 
     async deleteMovie(id: string): Promise<Movie | ResponseMessage> {
-        const movie: Movie | undefined = await this.moviesRepository.findOne({ imdbId: id });
+        const movie: Movie | null = await this.moviesRepository.findOneBy({ imdbId: id });
         if (!movie) {
             return {
                 status: "404",

@@ -1,5 +1,5 @@
-import { createConnection, getConnection, Connection, ConnectionOptions } from "typeorm";
 import { Movie } from "./entities/movie";
+import { createConnection, getConnection, Connection, ConnectionOptions } from "typeorm";
 
 export const dbConfig: ConnectionOptions = {
     type: "postgres",
